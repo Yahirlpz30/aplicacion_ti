@@ -2,54 +2,30 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+from utils.auth import check_login
+from utils.dropbox_manager import read_excel_dropbox, upload_excel_dropbox
+
+
 st.set_page_config(
     page_title="Sistema Estatal Anticorrupción",
     layout="wide"
 )
 
-# -----------------------------
-# FUNCIÓN LOGIN
-# -----------------------------
 
-def check_login(user, password):
-
-    try:
-        users = pd.read_excel("data/user-pass.xlsx")
-    except:
-        st.error("No se encontró el archivo user-pass.xlsx")
-        return False
-
-    user_row = users[
-        (users["user"] == user) &
-        (users["password"] == password)
-    ]
-
-    return not user_row.empty
-
-
-# -----------------------------
-# SESIÓN
-# -----------------------------
+# -------------------------
+# SESSION STATE
+# -------------------------
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
 if "acciones" not in st.session_state:
-
-    st.session_state.acciones = pd.DataFrame({
-        "Estrategia": [],
-        "Linea de Acción": [],
-        "Acción": [],
-        "Inicio": [],
-        "Fin": [],
-        "Tipo de Acción": [],
-        "Temática": []
-    })
+    st.session_state.acciones = pd.DataFrame()
 
 
-# -----------------------------
+# -------------------------
 # LOGIN
-# -----------------------------
+# -------------------------
 
 def login():
 
@@ -71,35 +47,44 @@ def login():
             st.error("Usuario o contraseña incorrectos")
 
 
-# -----------------------------
+# -------------------------
 # APP PRINCIPAL
-# -----------------------------
+# -------------------------
 
 def main_app():
 
     st.title("Reporte de Acciones 2025")
-    st.subheader("Programa de Implementación del PNA")
 
     st.divider()
 
     col1, col2, col3 = st.columns(3)
 
-    add = col1.button("➕ Agregar Acción")
-    save = col2.button("💾 Guardar Borrador")
-    send = col3.button("📤 Enviar")
+    add = col1.button("Agregar Acción")
+    save = col2.button("Guardar")
+    send = col3.button("Enviar")
 
-    st.divider()
+    if st.session_state.acciones.empty:
+
+        st.session_state.acciones = pd.DataFrame({
+            "Estrategia": [],
+            "Linea": [],
+            "Accion": [],
+            "Inicio": [],
+            "Fin": [],
+            "Tipo": [],
+            "Tematica": []
+        })
 
     if add:
 
         nueva = pd.DataFrame({
             "Estrategia": [""],
-            "Linea de Acción": [""],
-            "Acción": [""],
+            "Linea": [""],
+            "Accion": [""],
             "Inicio": [""],
             "Fin": [""],
-            "Tipo de Acción": [""],
-            "Temática": [""]
+            "Tipo": [""],
+            "Tematica": [""]
         })
 
         st.session_state.acciones = pd.concat(
@@ -117,22 +102,28 @@ def main_app():
 
     if save:
 
-        tabla.to_excel("acciones_borrador.xlsx", index=False)
+        upload_excel_dropbox(
+            tabla,
+            "/acciones/borrador.xlsx"
+        )
 
-        st.success("Borrador guardado")
+        st.success("Borrador guardado en Dropbox")
 
     if send:
 
         tabla["fecha_envio"] = datetime.now()
 
-        tabla.to_excel("acciones_enviadas.xlsx", index=False)
+        upload_excel_dropbox(
+            tabla,
+            "/acciones/enviado.xlsx"
+        )
 
-        st.success("Acciones enviadas correctamente")
+        st.success("Información enviada")
 
 
-# -----------------------------
+# -------------------------
 # FLUJO
-# -----------------------------
+# -------------------------
 
 if not st.session_state.logged_in:
 
