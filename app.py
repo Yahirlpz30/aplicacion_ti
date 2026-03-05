@@ -53,7 +53,7 @@ def login():
 
 def main_app():
 
-    st.title("Reporte de Acciones 2025")
+    st.title("Reporte de Acciones 2026")
 
     st.divider()
 
