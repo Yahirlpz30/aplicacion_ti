@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import hashlib
 from datetime import datetime
 
 st.set_page_config(
@@ -9,26 +8,20 @@ st.set_page_config(
 )
 
 # -----------------------------
-# FUNCIONES
+# FUNCIÓN LOGIN
 # -----------------------------
-
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
 
 def check_login(user, password):
 
     try:
         users = pd.read_excel("data/user-pass.xlsx")
     except:
-        st.error("Archivo de usuarios no encontrado")
+        st.error("No se encontró el archivo user-pass.xlsx")
         return False
 
-    hashed = hasd_password(password)
-    
     user_row = users[
         (users["user"] == user) &
-        (users["password"] == hashed)
+        (users["password"] == password)
     ]
 
     return not user_row.empty
