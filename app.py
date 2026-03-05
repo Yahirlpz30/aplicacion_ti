@@ -23,7 +23,9 @@ def check_login(user, password):
     except:
         st.error("Archivo de usuarios no encontrado")
         return False
-        
+
+    hashed = hasd_password(password)
+    
     user_row = users[
         (users["user"] == user) &
         (users["password"] == hashed)
